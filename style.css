@@ -1,16 +1,28 @@
 :root {
-  --bg-color: #ffffff;
-  --text-color: #333333;
-  --button-bg: #eeeeee;
-  --button-text: #333333;
+  --bg-color: oklch(0.98 0.01 240);
+  --text-color: oklch(0.25 0.02 240);
+  --card-bg: oklch(1 0 0);
+  --input-bg: oklch(0.98 0 0);
+  --input-border: oklch(0.85 0.02 240);
+  --primary-color: oklch(0.6 0.18 250);
+  --primary-hover: oklch(0.55 0.18 250);
+  --button-bg: oklch(0.95 0.01 240);
+  --button-text: oklch(0.25 0.02 240);
+  --shadow-color: rgba(0, 0, 0, 0.08);
   --transition-speed: 0.3s;
 }
 
 body.dark-mode {
-  --bg-color: #1a1a1a;
-  --text-color: #f5f5f5;
-  --button-bg: #333333;
-  --button-text: #ffffff;
+  --bg-color: oklch(0.15 0.02 240);
+  --text-color: oklch(0.95 0.01 240);
+  --card-bg: oklch(0.2 0.02 240);
+  --input-bg: oklch(0.18 0.02 240);
+  --input-border: oklch(0.3 0.02 240);
+  --primary-color: oklch(0.7 0.15 250);
+  --primary-hover: oklch(0.75 0.15 250);
+  --button-bg: oklch(0.25 0.02 240);
+  --button-text: oklch(0.95 0.01 240);
+  --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -21,9 +33,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  background-image: radial-gradient(var(--shadow-color) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .theme-toggle {
@@ -32,15 +47,123 @@ body {
   right: 20px;
   padding: 10px 20px;
   cursor: pointer;
-  border: none;
+  border: 1px solid var(--input-border);
   border-radius: 20px;
   background-color: var(--button-bg);
   color: var(--button-text);
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: transform 0.2s, background-color var(--transition-speed);
+  z-index: 100;
 }
 
 .theme-toggle:active {
   transform: scale(0.95);
+}
+
+h1 {
+  margin-top: 60px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Contact Section Styles */
+.contact-section {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 40px;
+}
+
+.contact-card {
+  background-color: var(--card-bg);
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px var(--shadow-color);
+  border: 1px solid var(--input-border);
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.contact-card h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.contact-card p {
+  color: var(--text-color);
+  opacity: 0.8;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.partnership-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-inline-start: 4px;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 2px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px oklch(from var(--primary-color) l c h / 0.15);
+}
+
+.submit-btn {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 16px oklch(from var(--primary-color) l c h / 0.25);
+}
+
+.submit-btn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px oklch(from var(--primary-color) l c h / 0.35);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .contact-card {
+    padding: 24px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
 }
