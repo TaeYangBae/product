@@ -142,7 +142,7 @@ h1 {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px oklch(from var(--primary-color) l c h / 0.15);
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15); /* Fallback to standard blue tint */
 }
 
 .submit-btn {
@@ -156,13 +156,13 @@ h1 {
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 8px 16px oklch(from var(--primary-color) l c h / 0.25);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .submit-btn:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px oklch(from var(--primary-color) l c h / 0.35);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
 .submit-btn:active {
