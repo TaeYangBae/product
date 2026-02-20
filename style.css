@@ -1,27 +1,27 @@
 :root {
-  --bg-color: oklch(0.98 0.01 240);
-  --text-color: oklch(0.25 0.02 240);
-  --card-bg: oklch(1 0 0);
-  --input-bg: oklch(0.98 0 0);
-  --input-border: oklch(0.85 0.02 240);
-  --primary-color: oklch(0.6 0.18 250);
-  --primary-hover: oklch(0.55 0.18 250);
-  --button-bg: oklch(0.95 0.01 240);
-  --button-text: oklch(0.25 0.02 240);
+  --bg-color: #f8f9fa;
+  --text-color: #212529;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: #dee2e6;
+  --primary-color: #4dabf7;
+  --primary-hover: #339af0;
+  --button-bg: #f1f3f5;
+  --button-text: #495057;
   --shadow-color: rgba(0, 0, 0, 0.08);
   --transition-speed: 0.3s;
 }
 
 body.dark-mode {
-  --bg-color: oklch(0.15 0.02 240);
-  --text-color: oklch(0.95 0.01 240);
-  --card-bg: oklch(0.2 0.02 240);
-  --input-bg: oklch(0.18 0.02 240);
-  --input-border: oklch(0.3 0.02 240);
-  --primary-color: oklch(0.7 0.15 250);
-  --primary-hover: oklch(0.75 0.15 250);
-  --button-bg: oklch(0.25 0.02 240);
-  --button-text: oklch(0.95 0.01 240);
+  --bg-color: #1a1b1e;
+  --text-color: #f8f9fa;
+  --card-bg: #25262b;
+  --input-bg: #2c2e33;
+  --input-border: #373a40;
+  --primary-color: #74c0fc;
+  --primary-hover: #a5d8ff;
+  --button-bg: #2c2e33;
+  --button-text: #ced4da;
   --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
@@ -94,7 +94,7 @@ h1 {
 }
 
 #disqus_thread {
-  min-height: 300px; /* Ensure space for Disqus to load */
+  min-height: 400px; /* 공간을 충분히 확보 */
 }
 
 .contact-card p {
@@ -138,7 +138,7 @@ h1 {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15); /* Fallback to standard blue tint */
+  box-shadow: 0 0 0 4px rgba(77, 171, 247, 0.15);
 }
 
 .submit-btn {
@@ -166,7 +166,7 @@ h1 {
 }
 
 @media (max-width: 480px) {
-  .contact-card {
+  .contact-card, .comments-card {
     padding: 24px;
   }
   

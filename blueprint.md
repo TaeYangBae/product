@@ -12,8 +12,9 @@ This project is a modern web application featuring a theme toggle, a partnership
 ## Project Status: Updated
 The application now includes a community engagement layer:
 - **Disqus Integration**: Integrated `product-15.disqus.com` for real-time comments.
-- **Unified Design**: The comments section is styled to match the contact form's aesthetics, including consistent shadows, borders, and responsiveness.
-- **Theme Awareness**: Transitions smoothly between light and dark modes.
+- **Unified Design**: The comments section is styled to match the contact form's aesthetics.
+- **Color System Upgrade**: Switched from OKLCH to standard Hex codes to ensure maximum compatibility with third-party scripts (like Disqus) and resolve parsing errors.
+- **Layout Optimization**: Positioned the community comments section above the partnership inquiry form for better user engagement.
 
 ### How to use:
 1.  **Formspree**: Go to [Formspree](https://formspree.io/) and replace the endpoint in `index.html` if you want to receive emails to your own account.
