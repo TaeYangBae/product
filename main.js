@@ -1,11 +1,22 @@
 /**
- * Modern Notepad Application
- * Logic for CRUD operations, Firestore persistence (with LocalStorage fallback), 
- * Calendar, Pinned Note, and Password Protection.
+ * Modern Notepad Application - Universal Cloud Sync Version
+ * To enable sync, please fill in the firebaseConfig values from your Firebase Console.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// --- [CRITICAL] Firebase 설정값을 여기에 입력하세요 ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCSl8u3iGu8kqA_93LYWOpX6nVKAuqrPek",
+  authDomain: "memo-bc11f.firebaseapp.com",
+  projectId: "memo-bc11f",
+  storageBucket: "memo-bc11f.firebasestorage.app",
+  messagingSenderId: "64557898227",
+  appId: "1:64557898227:web:ba73c21e991f8ae9cf5a86",
+  measurementId: "G-FJFY7VDD42"
+};
+// --------------------------------------------------
 
 class NoteManager {
     constructor() {
@@ -15,7 +26,7 @@ class NoteManager {
         this.searchTerm = '';
         this.correctPassword = '1806';
         this.db = null;
-        this.isCloud = false; // Flag to check if sync is active
+        this.isCloud = false;
 
         // DOM Elements
         this.notesList = document.getElementById('notes-list');
@@ -30,39 +41,43 @@ class NoteManager {
         this.noSelectionView = document.getElementById('no-selection');
         this.dateDisplay = document.getElementById('note-date');
         this.totalNotesDisplay = document.getElementById('total-notes');
-        
-        // Password Elements
         this.passwordOverlay = document.getElementById('password-overlay');
         this.passwordInput = document.getElementById('password-input');
         this.passwordError = document.getElementById('password-error');
         this.mainApp = document.getElementById('main-app');
-
-        // Calendar Elements
         this.calendarGrid = document.getElementById('calendar-grid');
         this.calendarMonthYear = document.getElementById('calendar-month-year');
-
-        // Pinned View Elements
         this.pinnedContent = document.getElementById('pinned-content');
 
         this.init();
     }
 
     async init() {
-        // 1. Initialize Firebase with Fallback
+        // 1. Firebase Initialize (우선순위: 하드코딩된 설정값 -> 자동 설정)
         try {
-            const response = await fetch('/__/firebase/init.json');
-            if (response.ok) {
-                const config = await response.json();
-                const app = initializeApp(config);
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                // 사용자가 설정값을 입력한 경우
+                const app = initializeApp(firebaseConfig);
                 this.db = getFirestore(app);
                 this.isCloud = true;
-                console.log("Cloud sync active.");
                 this.setupRealtimeListener();
+                console.log("Cloud sync enabled via manual config.");
             } else {
-                throw new Error("Local environment");
+                // 자동 설정을 시도 (Firebase Hosting 환경)
+                const response = await fetch('/__/firebase/init.json');
+                if (response.ok) {
+                    const config = await response.json();
+                    const app = initializeApp(config);
+                    this.db = getFirestore(app);
+                    this.isCloud = true;
+                    this.setupRealtimeListener();
+                    console.log("Cloud sync enabled via auto-init.");
+                } else {
+                    throw new Error("No config found");
+                }
             }
         } catch (e) {
-            console.warn("Using LocalStorage fallback. (Cloud sync unavailable in preview)");
+            console.warn("Cloud Sync inactive. Using LocalStorage. Please provide Firebase Config for sync.");
             this.isCloud = false;
             this.loadLocalNotes();
         }
@@ -79,15 +94,10 @@ class NoteManager {
         this.pinBtn.addEventListener('click', () => this.togglePin());
         this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
         this.passwordInput.addEventListener('input', (e) => this.handlePasswordInput(e));
-        
         this.titleInput.addEventListener('input', () => this.debouncedSave());
         this.bodyInput.addEventListener('input', () => this.debouncedSave());
-
         this.titleInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                this.bodyInput.focus();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); this.bodyInput.focus(); }
         });
 
         this.renderCalendar();
@@ -117,30 +127,20 @@ class NoteManager {
             if (this.currentNoteId) {
                 const currentNote = this.notes.find(n => n.id === this.currentNoteId);
                 if (currentNote) {
-                    if (document.activeElement !== this.titleInput) this.titleInput.value = currentNote.title;
-                    if (document.activeElement !== this.bodyInput) this.bodyInput.value = currentNote.body;
+                    if (document.activeElement !== this.titleInput) this.titleInput.value = currentNote.title || '';
+                    if (document.activeElement !== this.bodyInput) this.bodyInput.value = currentNote.body || '';
                     this.updateDateDisplay(currentNote.updatedAt);
-                } else {
-                    this.closeEditor();
                 }
             }
             this.renderPinnedView();
         });
     }
 
-    // --- Authentication ---
-
     handlePasswordInput(e) {
         const val = e.target.value;
         if (val.length === 4) {
-            if (val === this.correctPassword) {
-                this.unlockApp();
-            } else {
-                this.passwordError.classList.remove('hidden');
-                e.target.value = '';
-            }
-        } else {
-            this.passwordError.classList.add('hidden');
+            if (val === this.correctPassword) { this.unlockApp(); } 
+            else { this.passwordError.classList.remove('hidden'); e.target.value = ''; }
         }
     }
 
@@ -148,12 +148,8 @@ class NoteManager {
         sessionStorage.setItem('unlocked', 'true');
         this.passwordOverlay.classList.add('hidden');
         this.mainApp.classList.remove('blurred');
-        setTimeout(() => {
-            this.passwordOverlay.style.display = 'none';
-        }, 500);
+        setTimeout(() => { this.passwordOverlay.style.display = 'none'; }, 500);
     }
-
-    // --- Core Operations ---
 
     async addNote() {
         const newNote = {
@@ -161,13 +157,10 @@ class NoteManager {
             body: '',
             updatedAt: this.isCloud ? serverTimestamp() : new Date().toISOString()
         };
-
         if (this.isCloud) {
-            try {
-                const docRef = await addDoc(collection(this.db, "notes"), newNote);
-                this.currentNoteId = docRef.id;
-                this.openNote(docRef.id);
-            } catch (e) { console.error(e); }
+            const docRef = await addDoc(collection(this.db, "notes"), newNote);
+            this.currentNoteId = docRef.id;
+            this.openNote(docRef.id);
         } else {
             const id = Date.now().toString();
             this.notes.unshift({ id, ...newNote });
@@ -181,18 +174,13 @@ class NoteManager {
 
     async deleteNote() {
         if (!this.currentNoteId) return;
-        if (confirm('이 메모를 삭제하시겠습니까?')) {
-            if (this.pinnedNoteId === this.currentNoteId) {
-                this.pinnedNoteId = null;
-                localStorage.removeItem('pinnedNoteId');
-            }
+        if (confirm('메모를 삭제하시겠습니까? (모든 기기에서 삭제됩니다)')) {
             if (this.isCloud) {
-                try { await deleteDoc(doc(this.db, "notes", this.currentNoteId)); } catch (e) { console.error(e); }
+                await deleteDoc(doc(this.db, "notes", this.currentNoteId));
             } else {
                 this.notes = this.notes.filter(n => n.id !== this.currentNoteId);
                 this.saveToLocalStorage();
                 this.renderNotesList();
-                this.renderPinnedView();
             }
             this.currentNoteId = null;
             this.closeEditor();
@@ -209,58 +197,38 @@ class NoteManager {
         if (!this.currentNoteId) return;
         const title = this.titleInput.value;
         const body = this.bodyInput.value;
-        const updatedAt = this.isCloud ? serverTimestamp() : new Date().toISOString();
-
         if (this.isCloud) {
-            try {
-                await updateDoc(doc(this.db, "notes", this.currentNoteId), { title, body, updatedAt });
-            } catch (e) { console.error(e); }
+            await updateDoc(doc(this.db, "notes", this.currentNoteId), { title, body, updatedAt: serverTimestamp() });
         } else {
             const index = this.notes.findIndex(n => n.id === this.currentNoteId);
             if (index !== -1) {
-                this.notes[index] = { ...this.notes[index], title, body, updatedAt };
-                const moved = this.notes.splice(index, 1)[0];
-                this.notes.unshift(moved);
+                this.notes[index] = { ...this.notes[index], title, body, updatedAt: new Date().toISOString() };
                 this.saveToLocalStorage();
                 this.renderNotesList();
-                this.updateDateDisplay(updatedAt);
             }
         }
-        if (this.pinnedNoteId === this.currentNoteId) this.renderPinnedView();
     }
 
     handleManualSave() {
         this.saveCurrentNote();
         this.saveBtn.classList.add('saved');
-        const icon = this.saveBtn.querySelector('i');
-        icon.classList.replace('bi-check-lg', 'bi-check-all');
-        setTimeout(() => {
-            this.saveBtn.classList.remove('saved');
-            icon.classList.replace('bi-check-all', 'bi-check-lg');
-        }, 1500);
+        setTimeout(() => { this.saveBtn.classList.remove('saved'); }, 1500);
     }
-
-    // --- UI Logic ---
 
     renderNotesList() {
         const filteredNotes = this.notes.filter(note => 
             (note.title?.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
              note.body?.toLowerCase().includes(this.searchTerm.toLowerCase()))
         );
-
-        if (filteredNotes.length === 0) {
-            this.notesList.innerHTML = `<div class="empty-state"><p>${this.searchTerm ? '검색 결과가 없습니다.' : '메모가 없습니다.'}</p></div>`;
-            return;
-        }
-
-        this.notesList.innerHTML = filteredNotes.map(note => `
-            <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" data-id="${note.id}">
-                <h3>${note.title || '제목 없음'}</h3>
-                <p>${note.body || '내용이 없습니다.'}</p>
-                <div class="meta">${this.formatDate(note.updatedAt, true)}</div>
-            </div>
-        `).join('');
-
+        this.notesList.innerHTML = filteredNotes.length === 0 
+            ? `<div class="empty-state"><p>메모가 없습니다.</p></div>`
+            : filteredNotes.map(note => `
+                <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" data-id="${note.id}">
+                    <h3>${note.title || '제목 없음'}</h3>
+                    <p>${note.body || '내용 없음'}</p>
+                    <div class="meta">${this.formatDate(note.updatedAt, true)}</div>
+                </div>
+            `).join('');
         this.notesList.querySelectorAll('.note-item').forEach(item => {
             item.addEventListener('click', () => this.openNote(item.dataset.id));
         });
@@ -268,17 +236,13 @@ class NoteManager {
 
     renderPinnedView() {
         if (!this.pinnedNoteId) {
-            this.pinnedContent.innerHTML = `<div class="pinned-empty"><p>고정된 메모가 없습니다.</p><span>에디터에서 핀 아이콘을 눌러주세요.</span></div>`;
+            this.pinnedContent.innerHTML = `<div class="pinned-empty"><p>고정된 메모가 없습니다.</p></div>`;
             return;
         }
         const pinnedNote = this.notes.find(n => n.id === this.pinnedNoteId);
-        if (!pinnedNote) {
-            this.pinnedNoteId = null;
-            localStorage.removeItem('pinnedNoteId');
-            this.renderPinnedView();
-            return;
+        if (pinnedNote) {
+            this.pinnedContent.innerHTML = `<div class="pinned-memo-card"><h3>${pinnedNote.title || '제목 없음'}</h3><p>${pinnedNote.body || '내용 없음'}</p></div>`;
         }
-        this.pinnedContent.innerHTML = `<div class="pinned-memo-card"><h3>${pinnedNote.title || '제목 없음'}</h3><p>${pinnedNote.body || '내용이 없습니다.'}</p></div>`;
     }
 
     renderCalendar() {
@@ -296,48 +260,26 @@ class NoteManager {
         const note = this.notes.find(n => n.id === id);
         if (!note) return;
         this.currentNoteId = id;
-        this.titleInput.value = note.title;
-        this.bodyInput.value = note.body;
+        this.titleInput.value = note.title || '';
+        this.bodyInput.value = note.body || '';
         this.updateDateDisplay(note.updatedAt);
-        this.updatePinButtonUI();
         this.editorContainer.classList.remove('hidden');
         this.noSelectionView.classList.add('hidden');
         this.renderNotesList();
     }
 
-    updatePinButtonUI() {
-        const icon = this.pinBtn.querySelector('i');
-        if (this.currentNoteId === this.pinnedNoteId) {
-            this.pinBtn.classList.add('active');
-            icon.classList.replace('bi-pin-angle', 'bi-pin-fill');
-        } else {
-            this.pinBtn.classList.remove('active');
-            icon.classList.replace('bi-pin-fill', 'bi-pin-angle');
-        }
+    togglePin() {
+        if (!this.currentNoteId) return;
+        this.pinnedNoteId = (this.pinnedNoteId === this.currentNoteId) ? null : this.currentNoteId;
+        localStorage.setItem('pinnedNoteId', this.pinnedNoteId || '');
+        this.renderPinnedView();
     }
 
-    closeEditor() {
-        this.editorContainer.classList.add('hidden');
-        this.noSelectionView.classList.remove('hidden');
-    }
-
-    handleSearch(e) {
-        this.searchTerm = e.target.value;
-        this.renderNotesList();
-    }
-
-    saveToLocalStorage() {
-        localStorage.setItem('notes', JSON.stringify(this.notes));
-    }
-
-    updateTotalCount() {
-        this.totalNotesDisplay.innerText = `${this.notes.length} notes`;
-    }
-
-    updateDateDisplay(isoString) {
-        this.dateDisplay.innerText = `Last modified: ${this.formatDate(isoString, true)}`;
-    }
-
+    closeEditor() { this.editorContainer.classList.add('hidden'); this.noSelectionView.classList.remove('hidden'); }
+    handleSearch(e) { this.searchTerm = e.target.value; this.renderNotesList(); }
+    saveToLocalStorage() { localStorage.setItem('notes', JSON.stringify(this.notes)); }
+    updateTotalCount() { this.totalNotesDisplay.innerText = `${this.notes.length} notes`; }
+    updateDateDisplay(isoString) { this.dateDisplay.innerText = `Last modified: ${this.formatDate(isoString, true)}`; }
     formatDate(isoString, includeTime = false) {
         if (!isoString) return '-';
         const date = new Date(isoString);
