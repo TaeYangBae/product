@@ -12,6 +12,7 @@ class NoteManager {
         // DOM Elements
         this.notesList = document.getElementById('notes-list');
         this.addBtn = document.getElementById('add-note-btn');
+        this.saveBtn = document.getElementById('save-note-btn');
         this.deleteBtn = document.getElementById('delete-note-btn');
         this.titleInput = document.getElementById('note-title-input');
         this.bodyInput = document.getElementById('note-body-input');
@@ -27,10 +28,11 @@ class NoteManager {
     init() {
         // Event Listeners
         this.addBtn.addEventListener('click', () => this.addNote());
+        this.saveBtn.addEventListener('click', () => this.handleManualSave());
         this.deleteBtn.addEventListener('click', () => this.deleteNote());
         this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
         
-        // Auto-save on input
+        // Auto-save & Real-time List update on input
         this.titleInput.addEventListener('input', () => this.saveCurrentNote());
         this.bodyInput.addEventListener('input', () => this.saveCurrentNote());
 
@@ -87,8 +89,22 @@ class NoteManager {
         this.notes.unshift(updatedNote);
 
         this.saveToStorage();
-        this.renderNotesList();
+        this.renderNotesList(); // Real-time list update
         this.updateDateDisplay(updatedNote.updatedAt);
+    }
+
+    handleManualSave() {
+        this.saveCurrentNote();
+        
+        // Visual feedback
+        this.saveBtn.classList.add('saved');
+        const icon = this.saveBtn.querySelector('i');
+        icon.classList.replace('bi-check-lg', 'bi-check-all');
+        
+        setTimeout(() => {
+            this.saveBtn.classList.remove('saved');
+            icon.classList.replace('bi-check-all', 'bi-check-lg');
+        }, 1500);
     }
 
     // --- UI Logic ---
