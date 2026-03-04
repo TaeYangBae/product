@@ -1,6 +1,6 @@
 /**
  * Modern Notepad Application
- * Logic for CRUD operations and localStorage persistence.
+ * Logic for CRUD operations, localStorage persistence, and Calendar rendering.
  */
 
 class NoteManager {
@@ -21,6 +21,10 @@ class NoteManager {
         this.noSelectionView = document.getElementById('no-selection');
         this.dateDisplay = document.getElementById('note-date');
         this.totalNotesDisplay = document.getElementById('total-notes');
+        
+        // Calendar Elements
+        this.calendarGrid = document.getElementById('calendar-grid');
+        this.calendarMonthYear = document.getElementById('calendar-month-year');
 
         this.init();
     }
@@ -45,6 +49,7 @@ class NoteManager {
         });
 
         this.renderNotesList();
+        this.renderCalendar();
         this.updateTotalCount();
     }
 
@@ -132,7 +137,7 @@ class NoteManager {
             <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" data-id="${note.id}">
                 <h3>${note.title || '제목 없음'}</h3>
                 <p>${note.body || '내용이 없습니다.'}</p>
-                <div class="meta">${this.formatDate(note.updatedAt)}</div>
+                <div class="meta">${this.formatDate(note.updatedAt, true)}</div>
             </div>
         `).join('');
 
@@ -140,6 +145,36 @@ class NoteManager {
         this.notesList.querySelectorAll('.note-item').forEach(item => {
             item.addEventListener('click', () => this.openNote(item.dataset.id));
         });
+    }
+
+    renderCalendar() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const today = now.getDate();
+
+        // Set Header
+        const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now);
+        this.calendarMonthYear.innerText = `${monthName} ${year}`;
+
+        // Get first day of month and total days
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        let calendarHTML = '';
+
+        // Add empty cells for days from previous month
+        for (let i = 0; i < firstDay; i++) {
+            calendarHTML += '<div class="calendar-day empty"></div>';
+        }
+
+        // Add days of current month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = day === today;
+            calendarHTML += `<div class="calendar-day ${isToday ? 'today' : ''}">${day}</div>`;
+        }
+
+        this.calendarGrid.innerHTML = calendarHTML;
     }
 
     openNote(id) {
@@ -191,6 +226,7 @@ class NoteManager {
         if (includeTime) {
             options.hour = '2-digit';
             options.minute = '2-digit';
+            options.hour12 = false; // 24-hour format
         }
         return new Intl.DateTimeFormat('ko-KR', options).format(date);
     }

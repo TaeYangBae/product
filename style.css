@@ -13,19 +13,19 @@
     --success: oklch(70% 0.18 150);
     --danger: oklch(65% 0.22 25);
     
-    /* Spacing & Borders */
+    /* Spacing & Borders - Increased for 'soft' feel */
     --sidebar-width: 340px;
-    --radius-xl: 24px;
-    --radius-lg: 16px;
-    --radius-md: 12px;
+    --radius-xl: 32px;
+    --radius-lg: 20px;
+    --radius-md: 16px;
     
     /* Shadows - Multi-layered for depth */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 12px 24px -8px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.12);
-    --shadow-glow: 0 0 20px var(--primary-glow);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 16px 32px -8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 40px 80px -16px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 25px var(--primary-glow);
     
-    --transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
 }
 
 * {
@@ -36,11 +36,13 @@
 }
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Font change to Pretendard */
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
     background-color: var(--bg-app);
     color: var(--text-main);
     height: 100vh;
     overflow: hidden;
+    letter-spacing: -0.01em; /* Modern tightening */
     /* Subtle noise texture */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     background-attachment: fixed;
@@ -51,34 +53,34 @@ body {
     display: flex;
     height: 100vh;
     width: 100%;
-    padding: 20px;
-    gap: 20px;
+    padding: 24px;
+    gap: 24px;
 }
 
 /* --- Sidebar --- */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-sidebar);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(30px);
     border-radius: var(--radius-xl);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-md);
-    animation: slideInLeft 0.6s ease;
+    animation: slideInLeft 0.8s ease;
 }
 
 .sidebar-header {
-    padding: 32px 28px 20px;
+    padding: 36px 32px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .sidebar-header h1 {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 800;
-    letter-spacing: -1.5px;
+    letter-spacing: -2px;
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -91,10 +93,10 @@ body {
 }
 
 .btn-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    border: 1px solid rgba(0, 0, 0, 0.03);
+    width: 48px;
+    height: 48px;
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.02);
     background: white;
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -103,11 +105,11 @@ body {
     cursor: pointer;
     transition: var(--transition);
     color: var(--text-main);
-    font-size: 18px;
+    font-size: 20px;
 }
 
 .btn-icon:hover {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-4px) scale(1.08);
     box-shadow: var(--shadow-md), var(--shadow-glow);
     color: var(--primary);
 }
@@ -118,57 +120,59 @@ body {
     border: none;
 }
 
-#add-note-btn:hover {
-    box-shadow: 0 10px 20px -5px oklch(65% 0.22 260 / 40%);
-}
-
 /* Search Box */
 .search-box {
-    margin: 0 24px 24px;
+    margin: 0 28px 28px;
     position: relative;
 }
 
 .search-box i {
     position: absolute;
-    left: 16px;
+    left: 18px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .search-box input {
     width: 100%;
-    padding: 14px 16px 14px 44px;
-    border-radius: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    background: rgba(255, 255, 255, 0.6);
-    font-size: 15px;
+    padding: 16px 20px 16px 52px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
     outline: none;
     transition: var(--transition);
+    font-family: inherit;
 }
 
 .search-box input:focus {
     background: white;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px var(--primary-glow);
+    box-shadow: 0 0 0 5px var(--primary-glow);
 }
 
 /* Notes List */
 .notes-list {
-    flex: 1;
+    height: 45%;
     overflow-y: auto;
-    padding: 0 16px 20px;
-    mask-image: linear-gradient(to bottom, transparent, black 20px, black calc(100% - 20px), transparent);
+    padding: 0 20px 10px;
+    mask-image: linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent);
 }
 
 .notes-list::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
+}
+
+.notes-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
 }
 
 .note-item {
-    padding: 20px;
-    margin-bottom: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: var(--transition);
@@ -179,35 +183,36 @@ body {
 }
 
 .note-item:hover {
-    background: rgba(255, 255, 255, 0.4);
-    transform: translateX(4px);
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateX(6px);
 }
 
 .note-item.active {
     background: white;
     box-shadow: var(--shadow-md);
-    border-color: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.01);
 }
 
 .note-item.active::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 20%;
-    bottom: 20%;
-    width: 4px;
+    top: 25%;
+    bottom: 25%;
+    width: 5px;
     background: var(--primary);
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 10px 10px 0;
 }
 
 .note-item h3 {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: var(--text-main);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.3;
 }
 
 .note-item p {
@@ -217,30 +222,93 @@ body {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.5;
-    white-space: pre-wrap; /* Show line breaks in preview */
+    line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .note-item .meta {
     font-size: 12px;
-    margin-top: 12px;
+    margin-top: 14px;
     color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+}
+
+/* Calendar Section */
+.calendar-section {
+    flex: 1;
+    margin: 10px 28px 28px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 20px;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+.calendar-grid-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    flex: 1;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: default;
+    transition: var(--transition);
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-weight: 800;
+    box-shadow: var(--shadow-glow);
+}
+
+.calendar-day.empty {
+    opacity: 0.15;
 }
 
 /* --- Editor View --- */
 .editor-view {
     flex: 1;
     background: var(--bg-card);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(40px);
     border-radius: var(--radius-xl);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    animation: fadeIn 0.8s ease;
+    animation: fadeIn 1s ease;
 }
 
 .no-selection {
@@ -250,53 +318,55 @@ body {
     justify-content: center;
     height: 100%;
     text-align: center;
-    color: var(--text-muted);
 }
 
 .no-selection .illustration {
-    font-size: 80px;
-    margin-bottom: 24px;
+    font-size: 90px;
+    margin-bottom: 32px;
     background: linear-gradient(135deg, var(--primary-glow), transparent);
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    color: var(--primary);
 }
 
 .no-selection h2 {
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: 800;
     color: var(--text-main);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
 }
 
-.editor-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+.no-selection p {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .editor-header {
-    padding: 32px 48px;
+    padding: 36px 56px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 .editor-meta span {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-muted);
     background: var(--bg-app);
-    padding: 6px 16px;
-    border-radius: 20px;
+    padding: 8px 20px;
+    border-radius: 24px;
 }
 
 .editor-actions {
     display: flex;
-    gap: 16px;
+    gap: 20px;
 }
 
 .btn-icon.btn-save:hover {
@@ -314,76 +384,88 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 40px 48px;
+    padding: 48px 56px;
 }
 
 .title-input {
-    font-size: 48px;
+    font-size: 56px;
     font-weight: 900;
     border: none;
     outline: none;
-    margin-bottom: 32px;
-    letter-spacing: -2px;
+    margin-bottom: 40px;
+    letter-spacing: -3px;
     color: var(--text-main);
     background: transparent;
+    font-family: inherit;
+    line-height: 1.1;
 }
 
 .title-input::placeholder {
-    color: oklch(90% 0.01 260);
+    color: oklch(92% 0.01 260);
 }
 
 .body-input {
     flex: 1;
-    font-size: 19px;
-    line-height: 1.8;
+    font-size: 20px;
+    line-height: 1.9;
     border: none;
     outline: none;
     resize: none;
     color: oklch(35% 0.02 260);
     background: transparent;
+    font-family: inherit;
 }
 
 /* Animations */
 @keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-30px); }
+    from { opacity: 0; transform: translateX(-40px); }
     to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .hidden {
     display: none !important;
 }
 
+.sidebar-footer {
+    padding: 24px 32px;
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: right;
+}
+
 /* Responsive */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .app-container {
-        padding: 10px;
-        gap: 10px;
+        padding: 16px;
+        gap: 16px;
     }
     .sidebar {
-        width: 100px;
+        width: 120px;
     }
-    .sidebar-header h1, .search-box, .note-item h3, .note-item p, .note-item .meta, .sidebar-footer {
+    .sidebar-header h1, .search-box, .note-item h3, .note-item p, .note-item .meta, .sidebar-footer, .calendar-section {
         display: none;
     }
     .note-item {
         display: flex;
         justify-content: center;
-        padding: 15px;
+        padding: 20px;
     }
     .note-item::after {
         content: '\F479';
         font-family: 'bootstrap-icons';
-        font-size: 24px;
+        font-size: 28px;
     }
     .note-editor {
-        padding: 24px;
+        padding: 32px;
     }
     .title-input {
-        font-size: 32px;
+        font-size: 36px;
     }
 }
