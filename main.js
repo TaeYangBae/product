@@ -1,32 +1,31 @@
 /**
- * Modern Notepad Application - Universal Cloud Sync Version
- * To enable sync, please fill in the firebaseConfig values from your Firebase Console.
+ * Modern Notepad Application - Universal Cloud Sync Version (RTDB)
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+import { getDatabase, ref, push, set, update, remove, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// --- [CRITICAL] Firebase 설정값을 여기에 입력하세요 ---
+// --- New Firebase Configuration (memoo-bf0b1) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyCSl8u3iGu8kqA_93LYWOpX6nVKAuqrPek",
-  authDomain: "memo-bc11f.firebaseapp.com",
-  projectId: "memo-bc11f",
-  storageBucket: "memo-bc11f.firebasestorage.app",
-  messagingSenderId: "64557898227",
-  appId: "1:64557898227:web:ba73c21e991f8ae9cf5a86",
-  measurementId: "G-FJFY7VDD42"
+  apiKey: "AIzaSyD7FhoguHrXtryx2NPxDWrsmMEn_jYTFrc",
+  authDomain: "memoo-bf0b1.firebaseapp.com",
+  databaseURL: "https://memoo-bf0b1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "memoo-bf0b1",
+  storageBucket: "memoo-bf0b1.firebasestorage.app",
+  messagingSenderId: "410170355687",
+  appId: "1:410170355687:web:ba44f5d00514c3feba5742",
+  measurementId: "G-37PNK26LM1"
 };
 // --------------------------------------------------
 
 class NoteManager {
     constructor() {
         this.notes = [];
-        this.pinnedNoteId = localStorage.getItem('pinnedNoteId') || null;
         this.currentNoteId = null;
         this.searchTerm = '';
         this.correctPassword = '1806';
         this.db = null;
-        this.isCloud = false;
 
         // DOM Elements
         this.notesList = document.getElementById('notes-list');
@@ -53,33 +52,16 @@ class NoteManager {
     }
 
     async init() {
-        // 1. Firebase Initialize (우선순위: 하드코딩된 설정값 -> 자동 설정)
+        // 1. Initialize Firebase
         try {
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-                // 사용자가 설정값을 입력한 경우
-                const app = initializeApp(firebaseConfig);
-                this.db = getFirestore(app);
-                this.isCloud = true;
-                this.setupRealtimeListener();
-                console.log("Cloud sync enabled via manual config.");
-            } else {
-                // 자동 설정을 시도 (Firebase Hosting 환경)
-                const response = await fetch('/__/firebase/init.json');
-                if (response.ok) {
-                    const config = await response.json();
-                    const app = initializeApp(config);
-                    this.db = getFirestore(app);
-                    this.isCloud = true;
-                    this.setupRealtimeListener();
-                    console.log("Cloud sync enabled via auto-init.");
-                } else {
-                    throw new Error("No config found");
-                }
-            }
+            const app = initializeApp(firebaseConfig);
+            this.db = getDatabase(app);
+            getAnalytics(app); // Initialize analytics
+            this.setupRealtimeListener();
+            console.log("Cloud sync active via Realtime Database (memoo-bf0b1).");
         } catch (e) {
-            console.warn("Cloud Sync inactive. Using LocalStorage. Please provide Firebase Config for sync.");
-            this.isCloud = false;
-            this.loadLocalNotes();
+            console.error("Firebase connection failed:", e);
+            alert("데이터베이스 연결에 실패했습니다.");
         }
 
         // 2. Password check
@@ -92,47 +74,55 @@ class NoteManager {
         this.saveBtn.addEventListener('click', () => this.handleManualSave());
         this.deleteBtn.addEventListener('click', () => this.deleteNote());
         this.pinBtn.addEventListener('click', () => this.togglePin());
-        this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+        this.searchInput.addEventListener('input', (e) => {
+            this.searchTerm = e.target.value;
+            this.renderNotesList();
+        });
         this.passwordInput.addEventListener('input', (e) => this.handlePasswordInput(e));
+        
+        // Auto-save logic
         this.titleInput.addEventListener('input', () => this.debouncedSave());
         this.bodyInput.addEventListener('input', () => this.debouncedSave());
+
         this.titleInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); this.bodyInput.focus(); }
         });
 
         this.renderCalendar();
-        if (!this.isCloud) {
-            this.renderNotesList();
-            this.renderPinnedView();
-            this.updateTotalCount();
-        }
-    }
-
-    loadLocalNotes() {
-        this.notes = JSON.parse(localStorage.getItem('notes')) || [];
-        this.renderNotesList();
     }
 
     setupRealtimeListener() {
         if (!this.db) return;
-        const q = query(collection(this.db, "notes"), orderBy("updatedAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            this.notes = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                updatedAt: doc.data().updatedAt?.toDate().toISOString() || new Date().toISOString()
-            }));
+        const notesRef = ref(this.db, 'notes');
+        
+        onValue(notesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                this.notes = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            } else {
+                this.notes = [];
+            }
+            
             this.renderNotesList();
             this.updateTotalCount();
+            
             if (this.currentNoteId) {
                 const currentNote = this.notes.find(n => n.id === this.currentNoteId);
                 if (currentNote) {
                     if (document.activeElement !== this.titleInput) this.titleInput.value = currentNote.title || '';
                     if (document.activeElement !== this.bodyInput) this.bodyInput.value = currentNote.body || '';
                     this.updateDateDisplay(currentNote.updatedAt);
+                } else {
+                    this.closeEditor();
                 }
             }
             this.renderPinnedView();
+        }, (error) => {
+            console.error("Database Error:", error);
+            alert("동기화 오류: Firebase 콘솔의 [규칙]에서 .read와 .write가 true인지 확인하세요.");
         });
     }
 
@@ -152,39 +142,32 @@ class NoteManager {
     }
 
     async addNote() {
+        if (!this.db) return;
+        const notesRef = ref(this.db, 'notes');
+        const newNoteRef = push(notesRef);
+        
         const newNote = {
             title: '',
             body: '',
-            updatedAt: this.isCloud ? serverTimestamp() : new Date().toISOString()
+            updatedAt: serverTimestamp()
         };
-        if (this.isCloud) {
-            const docRef = await addDoc(collection(this.db, "notes"), newNote);
-            this.currentNoteId = docRef.id;
-            this.openNote(docRef.id);
-        } else {
-            const id = Date.now().toString();
-            this.notes.unshift({ id, ...newNote });
-            this.currentNoteId = id;
-            this.saveToLocalStorage();
-            this.renderNotesList();
-            this.openNote(id);
-        }
-        this.titleInput.focus();
+
+        try {
+            await set(newNoteRef, newNote);
+            this.currentNoteId = newNoteRef.key;
+            this.openNote(this.currentNoteId);
+            this.titleInput.focus();
+        } catch (e) { console.error(e); }
     }
 
     async deleteNote() {
-        if (!this.currentNoteId) return;
+        if (!this.currentNoteId || !this.db) return;
         if (confirm('메모를 삭제하시겠습니까? (모든 기기에서 삭제됩니다)')) {
-            if (this.isCloud) {
-                await deleteDoc(doc(this.db, "notes", this.currentNoteId));
-            } else {
-                this.notes = this.notes.filter(n => n.id !== this.currentNoteId);
-                this.saveToLocalStorage();
-                this.renderNotesList();
-            }
-            this.currentNoteId = null;
-            this.closeEditor();
-            this.updateTotalCount();
+            try {
+                await remove(ref(this.db, `notes/${this.currentNoteId}`));
+                this.currentNoteId = null;
+                this.closeEditor();
+            } catch (e) { console.error(e); }
         }
     }
 
@@ -194,19 +177,17 @@ class NoteManager {
     }
 
     async saveCurrentNote() {
-        if (!this.currentNoteId) return;
+        if (!this.currentNoteId || !this.db) return;
         const title = this.titleInput.value;
         const body = this.bodyInput.value;
-        if (this.isCloud) {
-            await updateDoc(doc(this.db, "notes", this.currentNoteId), { title, body, updatedAt: serverTimestamp() });
-        } else {
-            const index = this.notes.findIndex(n => n.id === this.currentNoteId);
-            if (index !== -1) {
-                this.notes[index] = { ...this.notes[index], title, body, updatedAt: new Date().toISOString() };
-                this.saveToLocalStorage();
-                this.renderNotesList();
-            }
-        }
+        
+        try {
+            await update(ref(this.db, `notes/${this.currentNoteId}`), {
+                title,
+                body,
+                updatedAt: serverTimestamp()
+            });
+        } catch (e) { console.error(e); }
     }
 
     handleManualSave() {
@@ -226,22 +207,31 @@ class NoteManager {
                 <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" data-id="${note.id}">
                     <h3>${note.title || '제목 없음'}</h3>
                     <p>${note.body || '내용 없음'}</p>
-                    <div class="meta">${this.formatDate(note.updatedAt, true)}</div>
+                    <div class="meta">${this.formatDate(note.updatedAt)}</div>
                 </div>
             `).join('');
+        
         this.notesList.querySelectorAll('.note-item').forEach(item => {
             item.addEventListener('click', () => this.openNote(item.dataset.id));
         });
     }
 
     renderPinnedView() {
-        if (!this.pinnedNoteId) {
+        const pinnedId = localStorage.getItem('pinnedNoteId');
+        if (!pinnedId) {
             this.pinnedContent.innerHTML = `<div class="pinned-empty"><p>고정된 메모가 없습니다.</p></div>`;
             return;
         }
-        const pinnedNote = this.notes.find(n => n.id === this.pinnedNoteId);
+        const pinnedNote = this.notes.find(n => n.id === pinnedId);
         if (pinnedNote) {
-            this.pinnedContent.innerHTML = `<div class="pinned-memo-card"><h3>${pinnedNote.title || '제목 없음'}</h3><p>${pinnedNote.body || '내용 없음'}</p></div>`;
+            this.pinnedContent.innerHTML = `
+                <div class="pinned-memo-card">
+                    <h3>${pinnedNote.title || '제목 없음'}</h3>
+                    <p>${pinnedNote.body || '내용 없음'}</p>
+                </div>`;
+        } else {
+            localStorage.removeItem('pinnedNoteId');
+            this.renderPinnedView();
         }
     }
 
@@ -270,22 +260,23 @@ class NoteManager {
 
     togglePin() {
         if (!this.currentNoteId) return;
-        this.pinnedNoteId = (this.pinnedNoteId === this.currentNoteId) ? null : this.currentNoteId;
-        localStorage.setItem('pinnedNoteId', this.pinnedNoteId || '');
+        const currentPin = localStorage.getItem('pinnedNoteId');
+        if (currentPin === this.currentNoteId) {
+            localStorage.removeItem('pinnedNoteId');
+        } else {
+            localStorage.setItem('pinnedNoteId', this.currentNoteId);
+        }
         this.renderPinnedView();
     }
 
     closeEditor() { this.editorContainer.classList.add('hidden'); this.noSelectionView.classList.remove('hidden'); }
-    handleSearch(e) { this.searchTerm = e.target.value; this.renderNotesList(); }
-    saveToLocalStorage() { localStorage.setItem('notes', JSON.stringify(this.notes)); }
     updateTotalCount() { this.totalNotesDisplay.innerText = `${this.notes.length} notes`; }
-    updateDateDisplay(isoString) { this.dateDisplay.innerText = `Last modified: ${this.formatDate(isoString, true)}`; }
-    formatDate(isoString, includeTime = false) {
-        if (!isoString) return '-';
-        const date = new Date(isoString);
-        const options = { month: 'short', day: 'numeric' };
-        if (includeTime) { options.hour = '2-digit', options.minute = '2-digit', options.hour12 = false; }
-        return new Intl.DateTimeFormat('ko-KR', options).format(date);
+    updateDateDisplay(timestamp) { this.dateDisplay.innerText = `Last modified: ${this.formatDate(timestamp)}`; }
+    
+    formatDate(timestamp) {
+        if (!timestamp) return '-';
+        const date = new Date(timestamp);
+        return new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
     }
 }
 
