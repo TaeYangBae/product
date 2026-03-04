@@ -6,6 +6,7 @@
     --bg-app: oklch(98% 0.01 260);
     --bg-sidebar: oklch(96% 0.015 260 / 80%);
     --bg-card: oklch(100% 0 0 / 90%);
+    --pinned-accent: oklch(85% 0.15 90); /* Soft Amber for Sticky Note */
     
     --text-main: oklch(25% 0.02 260);
     --text-muted: oklch(55% 0.02 260);
@@ -15,6 +16,7 @@
     
     /* Spacing & Borders - Increased for 'soft' feel */
     --sidebar-width: 340px;
+    --pinned-width: 300px;
     --radius-xl: 32px;
     --radius-lg: 20px;
     --radius-md: 16px;
@@ -55,6 +57,84 @@ body {
     width: 100%;
     padding: 24px;
     gap: 24px;
+    transition: filter 0.5s ease;
+}
+
+.app-container.blurred {
+    filter: blur(20px);
+    pointer-events: none;
+}
+
+/* Password Overlay */
+.password-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(40px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.password-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.password-card {
+    background: white;
+    padding: 48px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    animation: fadeIn 0.8s ease;
+}
+
+.lock-icon {
+    font-size: 48px;
+    color: var(--primary);
+    margin-bottom: 24px;
+}
+
+.password-card h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.password-card p {
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+.password-input-group input {
+    width: 100%;
+    padding: 16px;
+    font-size: 32px;
+    text-align: center;
+    letter-spacing: 12px;
+    border-radius: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.05);
+    background: var(--bg-app);
+    outline: none;
+    transition: var(--transition);
+}
+
+.password-input-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 5px var(--primary-glow);
+}
+
+.password-error {
+    margin-top: 16px;
+    color: var(--danger);
+    font-size: 14px;
+    font-weight: 600;
 }
 
 /* --- Sidebar --- */
@@ -68,6 +148,7 @@ body {
     flex-direction: column;
     box-shadow: var(--shadow-md);
     animation: slideInLeft 0.8s ease;
+    flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -112,6 +193,12 @@ body {
     transform: translateY(-4px) scale(1.08);
     box-shadow: var(--shadow-md), var(--shadow-glow);
     color: var(--primary);
+}
+
+#pin-note-btn.active {
+    background: var(--pinned-accent);
+    color: oklch(30% 0.1 90);
+    box-shadow: 0 0 15px oklch(85% 0.15 90 / 30%);
 }
 
 #add-note-btn {
@@ -309,6 +396,7 @@ body {
     display: flex;
     flex-direction: column;
     animation: fadeIn 1s ease;
+    min-width: 0; /* Allow shrinking */
 }
 
 .no-selection {
@@ -416,9 +504,99 @@ body {
     font-family: inherit;
 }
 
+/* --- Right Pinned Sidebar --- */
+.pinned-sidebar {
+    width: var(--pinned-width);
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(30px);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+    animation: slideInRight 0.8s ease;
+}
+
+.pinned-header {
+    padding: 36px 28px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.pinned-header i {
+    color: oklch(65% 0.2 90);
+    font-size: 24px;
+}
+
+.pinned-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.pinned-content {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+}
+
+.pinned-memo-card {
+    background: var(--pinned-accent);
+    padding: 28px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md), inset 0 0 40px rgba(255, 255, 255, 0.3);
+    color: oklch(25% 0.05 90);
+    position: relative;
+    transform: rotate(1deg);
+    transition: var(--transition);
+}
+
+.pinned-memo-card:hover {
+    transform: rotate(0deg) scale(1.02);
+}
+
+.pinned-memo-card h3 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    line-height: 1.2;
+}
+
+.pinned-memo-card p {
+    font-size: 16px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    opacity: 0.9;
+}
+
+.pinned-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding-top: 60px;
+}
+
+.pinned-empty p {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.pinned-empty span {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
 /* Animations */
 @keyframes slideInLeft {
     from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(40px); }
     to { opacity: 1; transform: translateX(0); }
 }
 
@@ -441,6 +619,12 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .pinned-sidebar {
+        display: none;
+    }
+}
+
 @media (max-width: 1024px) {
     .app-container {
         padding: 16px;

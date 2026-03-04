@@ -14,7 +14,22 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
+    <!-- Password Protection Overlay -->
+    <div id="password-overlay" class="password-overlay">
+        <div class="password-card">
+            <div class="lock-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h2>비공개 메모장</h2>
+            <p>비밀번호 4자리를 입력하세요.</p>
+            <div class="password-input-group">
+                <input type="password" id="password-input" maxlength="4" placeholder="••••" autofocus>
+            </div>
+            <div id="password-error" class="password-error hidden">비밀번호가 틀렸습니다.</div>
+        </div>
+    </div>
+
+    <div class="app-container blurred" id="main-app">
         <!-- Sidebar -->
         <aside class="sidebar">
             <header class="sidebar-header">
@@ -70,6 +85,9 @@
                         <span id="note-date">Last modified: -</span>
                     </div>
                     <div class="editor-actions">
+                        <button id="pin-note-btn" class="btn-icon" aria-label="메모 고정">
+                            <i class="bi bi-pin-angle"></i>
+                        </button>
                         <button id="save-note-btn" class="btn-icon btn-save" aria-label="메모 저장">
                             <i class="bi bi-check-lg"></i>
                         </button>
@@ -85,6 +103,20 @@
                 </div>
             </div>
         </main>
+
+        <!-- Right Pinned Sidebar -->
+        <aside class="pinned-sidebar" id="pinned-sidebar">
+            <header class="pinned-header">
+                <i class="bi bi-pin-fill"></i>
+                <h2>Pinned Memo</h2>
+            </header>
+            <div id="pinned-content" class="pinned-content">
+                <div class="pinned-empty">
+                    <p>고정된 메모가 없습니다.</p>
+                    <span>에디터에서 핀 아이콘을 눌러주세요.</span>
+                </div>
+            </div>
+        </aside>
     </div>
 
     <script type="module" src="main.js"></script>
