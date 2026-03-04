@@ -22,6 +22,7 @@ const firebaseConfig = {
 class NoteManager {
     constructor() {
         this.notes = [];
+        this.pinnedNoteId = localStorage.getItem('pinnedNoteId') || null;
         this.currentNoteId = null;
         this.searchTerm = '';
         this.correctPassword = '1806';
@@ -40,13 +41,23 @@ class NoteManager {
         this.noSelectionView = document.getElementById('no-selection');
         this.dateDisplay = document.getElementById('note-date');
         this.totalNotesDisplay = document.getElementById('total-notes');
+        
+        // Password Elements
         this.passwordOverlay = document.getElementById('password-overlay');
         this.passwordInput = document.getElementById('password-input');
         this.passwordError = document.getElementById('password-error');
         this.mainApp = document.getElementById('main-app');
+        
+        // Calendar Elements
         this.calendarGrid = document.getElementById('calendar-grid');
         this.calendarMonthYear = document.getElementById('calendar-month-year');
+        
+        // Pinned View Elements
         this.pinnedContent = document.getElementById('pinned-content');
+
+        // Mobile UI Elements
+        this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        this.sidebar = document.getElementById('sidebar');
 
         this.init();
     }
@@ -56,7 +67,7 @@ class NoteManager {
         try {
             const app = initializeApp(firebaseConfig);
             this.db = getDatabase(app);
-            getAnalytics(app); // Initialize analytics
+            getAnalytics(app); 
             this.setupRealtimeListener();
             console.log("Cloud sync active via Realtime Database (memoo-bf0b1).");
         } catch (e) {
@@ -70,7 +81,10 @@ class NoteManager {
         }
 
         // 3. Event Listeners
-        this.addBtn.addEventListener('click', () => this.addNote());
+        this.addBtn.addEventListener('click', () => {
+            this.addNote();
+            this.closeMobileSidebar();
+        });
         this.saveBtn.addEventListener('click', () => this.handleManualSave());
         this.deleteBtn.addEventListener('click', () => this.deleteNote());
         this.pinBtn.addEventListener('click', () => this.togglePin());
@@ -80,6 +94,19 @@ class NoteManager {
         });
         this.passwordInput.addEventListener('input', (e) => this.handlePasswordInput(e));
         
+        // Mobile Menu Toggle
+        if (this.mobileMenuBtn) {
+            this.mobileMenuBtn.addEventListener('click', () => {
+                this.sidebar.classList.toggle('open');
+                const icon = this.mobileMenuBtn.querySelector('i');
+                if (this.sidebar.classList.contains('open')) {
+                    icon.classList.replace('bi-list', 'bi-x');
+                } else {
+                    icon.classList.replace('bi-x', 'bi-list');
+                }
+            });
+        }
+
         // Auto-save logic
         this.titleInput.addEventListener('input', () => this.debouncedSave());
         this.bodyInput.addEventListener('input', () => this.debouncedSave());
@@ -89,6 +116,14 @@ class NoteManager {
         });
 
         this.renderCalendar();
+    }
+
+    closeMobileSidebar() {
+        if (window.innerWidth <= 1024) {
+            this.sidebar.classList.remove('open');
+            const icon = this.mobileMenuBtn.querySelector('i');
+            if (icon) icon.classList.replace('bi-x', 'bi-list');
+        }
     }
 
     setupRealtimeListener() {
@@ -253,9 +288,24 @@ class NoteManager {
         this.titleInput.value = note.title || '';
         this.bodyInput.value = note.body || '';
         this.updateDateDisplay(note.updatedAt);
+        this.updatePinButtonUI();
         this.editorContainer.classList.remove('hidden');
         this.noSelectionView.classList.add('hidden');
         this.renderNotesList();
+        this.closeMobileSidebar();
+    }
+
+    updatePinButtonUI() {
+        if (!this.currentNoteId) return;
+        const pinnedId = localStorage.getItem('pinnedNoteId');
+        const icon = this.pinBtn.querySelector('i');
+        if (this.currentNoteId === pinnedId) {
+            this.pinBtn.classList.add('active');
+            icon.classList.replace('bi-pin-angle', 'bi-pin-fill');
+        } else {
+            this.pinBtn.classList.remove('active');
+            icon.classList.replace('bi-pin-fill', 'bi-pin-angle');
+        }
     }
 
     togglePin() {
@@ -266,10 +316,12 @@ class NoteManager {
         } else {
             localStorage.setItem('pinnedNoteId', this.currentNoteId);
         }
+        this.updatePinButtonUI();
         this.renderPinnedView();
     }
 
     closeEditor() { this.editorContainer.classList.add('hidden'); this.noSelectionView.classList.remove('hidden'); }
+    handleSearch(e) { this.searchTerm = e.target.value; this.renderNotesList(); }
     updateTotalCount() { this.totalNotesDisplay.innerText = `${this.notes.length} notes`; }
     updateDateDisplay(timestamp) { this.dateDisplay.innerText = `Last modified: ${this.formatDate(timestamp)}`; }
     

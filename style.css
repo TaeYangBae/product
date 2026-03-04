@@ -618,38 +618,95 @@ body {
     text-align: right;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .pinned-sidebar {
-        display: none;
-    }
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: none;
+    background: white;
+    box-shadow: var(--shadow-md);
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--text-main);
+    cursor: pointer;
 }
 
+/* Responsive */
 @media (max-width: 1024px) {
     .app-container {
-        padding: 16px;
-        gap: 16px;
+        padding: 0;
+        gap: 0;
+        flex-direction: column;
     }
-    .sidebar {
-        width: 120px;
-    }
-    .sidebar-header h1, .search-box, .note-item h3, .note-item p, .note-item .meta, .sidebar-footer, .calendar-section {
-        display: none;
-    }
-    .note-item {
+
+    .mobile-menu-btn {
         display: flex;
-        justify-content: center;
+    }
+
+    /* Sidebar becomes a drawer */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 90;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Editor takes full width */
+    .editor-view {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+
+    .editor-header {
+        padding: 20px;
+        padding-top: 80px; /* Space for menu button */
+    }
+
+    .note-editor {
         padding: 20px;
     }
-    .note-item::after {
-        content: '\F479';
-        font-family: 'bootstrap-icons';
-        font-size: 28px;
-    }
-    .note-editor {
-        padding: 32px;
-    }
+
     .title-input {
-        font-size: 36px;
+        font-size: 32px;
+    }
+
+    .body-input {
+        font-size: 18px;
+    }
+
+    /* Hide visual clutter on mobile */
+    .no-selection .illustration {
+        width: 120px;
+        height: 120px;
+        font-size: 60px;
+    }
+
+    .sidebar-header h1, .search-box, .note-item h3, .note-item p, .note-item .meta, .sidebar-footer, .calendar-section {
+        display: block; /* Restore visibility inside drawer */
+    }
+    
+    /* Pinned Sidebar - Hidden on mobile for now or can be another drawer */
+    .pinned-sidebar {
+        display: none;
     }
 }
