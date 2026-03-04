@@ -1,155 +1,178 @@
-import * as THREE from 'three';
+/**
+ * Modern Notepad Application
+ * Logic for CRUD operations and localStorage persistence.
+ */
 
-// --- Three.js Hero Background ---
-class HeroScene {
+class NoteManager {
     constructor() {
-        this.container = document.getElementById('hero-canvas-container');
-        if (!this.container) return;
+        this.notes = JSON.parse(localStorage.getItem('notes')) || [];
+        this.currentNoteId = null;
+        this.searchTerm = '';
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.container.appendChild(this.renderer.domElement);
-
-        this.particles = null;
-        this.mouse = new THREE.Vector2(0, 0);
-        this.targetMouse = new THREE.Vector2(0, 0);
+        // DOM Elements
+        this.notesList = document.getElementById('notes-list');
+        this.addBtn = document.getElementById('add-note-btn');
+        this.deleteBtn = document.getElementById('delete-note-btn');
+        this.titleInput = document.getElementById('note-title-input');
+        this.bodyInput = document.getElementById('note-body-input');
+        this.searchInput = document.getElementById('search-input');
+        this.editorContainer = document.getElementById('editor-container');
+        this.noSelectionView = document.getElementById('no-selection');
+        this.dateDisplay = document.getElementById('note-date');
+        this.totalNotesDisplay = document.getElementById('total-notes');
 
         this.init();
-        this.animate();
-        this.handleResize();
-        this.handleMouseMove();
     }
 
     init() {
-        // Create a grid of points to represent a "sensing field"
-        const geometry = new THREE.BufferGeometry();
-        const count = 3000;
-        const positions = new Float32Array(count * 3);
-        const sizes = new Float32Array(count);
+        // Event Listeners
+        this.addBtn.addEventListener('click', () => this.addNote());
+        this.deleteBtn.addEventListener('click', () => this.deleteNote());
+        this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+        
+        // Auto-save on input
+        this.titleInput.addEventListener('input', () => this.saveCurrentNote());
+        this.bodyInput.addEventListener('input', () => this.saveCurrentNote());
 
-        for (let i = 0; i < count; i++) {
-            // Random points in a wide area
-            positions[i * 3] = (Math.random() - 0.5) * 40;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
-            sizes[i] = Math.random() * 2;
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-        const material = new THREE.PointsMaterial({
-            color: 0x3b82f6, // Secondary color oklch(60% 0.2 250) roughly
-            size: 0.05,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending
-        });
-
-        this.particles = new THREE.Points(geometry, material);
-        this.scene.add(this.particles);
-
-        this.camera.position.z = 10;
+        this.renderNotesList();
+        this.updateTotalCount();
     }
 
-    handleMouseMove() {
-        window.addEventListener('mousemove', (e) => {
-            this.targetMouse.x = (e.clientX / window.innerWidth) - 0.5;
-            this.targetMouse.y = (e.clientY / window.innerHeight) - 0.5;
-        });
+    // --- Core Operations ---
+
+    addNote() {
+        const newNote = {
+            id: Date.now().toString(),
+            title: '',
+            body: '',
+            updatedAt: new Date().toISOString()
+        };
+
+        this.notes.unshift(newNote);
+        this.saveToStorage();
+        this.currentNoteId = newNote.id;
+        
+        this.renderNotesList();
+        this.openNote(newNote.id);
+        this.titleInput.focus();
+        this.updateTotalCount();
     }
 
-    handleResize() {
-        window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    }
-
-    animate() {
-        requestAnimationFrame(this.animate.bind(this));
-
-        // Smooth mouse movement
-        this.mouse.x += (this.targetMouse.x - this.mouse.x) * 0.05;
-        this.mouse.y += (this.targetMouse.y - this.mouse.y) * 0.05;
-
-        if (this.particles) {
-            this.particles.rotation.y += 0.001;
-            this.particles.rotation.x = this.mouse.y * 0.2;
-            this.particles.rotation.y = this.mouse.x * 0.2;
+    deleteNote() {
+        if (!this.currentNoteId) return;
+        
+        if (confirm('이 메모를 삭제하시겠습니까?')) {
+            this.notes = this.notes.filter(note => note.id !== this.currentNoteId);
+            this.currentNoteId = null;
+            this.saveToStorage();
             
-            // Subtle pulse
-            const time = Date.now() * 0.0005;
-            this.particles.position.y = Math.sin(time) * 0.2;
+            this.renderNotesList();
+            this.closeEditor();
+            this.updateTotalCount();
+        }
+    }
+
+    saveCurrentNote() {
+        if (!this.currentNoteId) return;
+
+        const noteIndex = this.notes.findIndex(note => note.id === this.currentNoteId);
+        if (noteIndex === -1) return;
+
+        this.notes[noteIndex].title = this.titleInput.value;
+        this.notes[noteIndex].body = this.bodyInput.value;
+        this.notes[noteIndex].updatedAt = new Date().toISOString();
+
+        // Re-order: Move recently edited note to top
+        const updatedNote = this.notes.splice(noteIndex, 1)[0];
+        this.notes.unshift(updatedNote);
+
+        this.saveToStorage();
+        this.renderNotesList();
+        this.updateDateDisplay(updatedNote.updatedAt);
+    }
+
+    // --- UI Logic ---
+
+    renderNotesList() {
+        const filteredNotes = this.notes.filter(note => 
+            note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+            note.body.toLowerCase().includes(this.searchTerm.toLowerCase())
+        );
+
+        if (filteredNotes.length === 0) {
+            this.notesList.innerHTML = `<div class="empty-state"><p>${this.searchTerm ? '검색 결과가 없습니다.' : '메모가 없습니다.'}</p></div>`;
+            return;
         }
 
-        this.renderer.render(this.scene, this.camera);
+        this.notesList.innerHTML = filteredNotes.map(note => `
+            <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" data-id="${note.id}">
+                <h3>${note.title || '제목 없음'}</h3>
+                <p>${note.body || '내용이 없습니다.'}</p>
+                <div class="meta">${this.formatDate(note.updatedAt)}</div>
+            </div>
+        `).join('');
+
+        // Add click listeners to items
+        this.notesList.querySelectorAll('.note-item').forEach(item => {
+            item.addEventListener('click', () => this.openNote(item.dataset.id));
+        });
+    }
+
+    openNote(id) {
+        const note = this.notes.find(n => n.id === id);
+        if (!note) return;
+
+        this.currentNoteId = id;
+        this.titleInput.value = note.title;
+        this.bodyInput.value = note.body;
+        this.updateDateDisplay(note.updatedAt);
+
+        this.editorContainer.classList.remove('hidden');
+        this.noSelectionView.classList.add('hidden');
+        
+        // Highlight active item in list
+        this.renderNotesList();
+    }
+
+    closeEditor() {
+        this.editorContainer.classList.add('hidden');
+        this.noSelectionView.classList.remove('hidden');
+    }
+
+    handleSearch(e) {
+        this.searchTerm = e.target.value;
+        this.renderNotesList();
+    }
+
+    // --- Utilities ---
+
+    saveToStorage() {
+        localStorage.setItem('notes', JSON.stringify(this.notes));
+    }
+
+    updateTotalCount() {
+        this.totalNotesDisplay.innerText = `${this.notes.length} notes`;
+    }
+
+    updateDateDisplay(isoString) {
+        this.dateDisplay.innerText = `Last modified: ${this.formatDate(isoString, true)}`;
+    }
+
+    formatDate(isoString, includeTime = false) {
+        const date = new Date(isoString);
+        const options = { 
+            month: 'short', 
+            day: 'numeric'
+        };
+        if (includeTime) {
+            options.hour = '2-digit';
+            options.minute = '2-digit';
+        }
+        return new Intl.DateTimeFormat('ko-KR', options).format(date);
     }
 }
 
-// --- UI Logic ---
+// Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Hero Animation
-    new HeroScene();
-
-    // Scroll Reveal
-    const revealElements = document.querySelectorAll('.reveal, .fade-in');
-    
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            }
-        });
-    }, { threshold: 0.1 });
-
-    revealElements.forEach(el => revealObserver.observe(el));
-
-    // Sticky Header
-    const header = document.querySelector('.main-header');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-    });
-
-    // Contact Form
-    const contactForm = document.getElementById('contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = contactForm.querySelector('button');
-            const originalText = btn.innerText;
-            
-            btn.innerText = '전송 중...';
-            btn.disabled = true;
-
-            // Simulate API call
-            setTimeout(() => {
-                alert('문의가 성공적으로 전송되었습니다. 곧 연락드리겠습니다.');
-                contactForm.reset();
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }, 1500);
-        });
-    }
-
-    // Mobile Navigation
-    const mobileToggle = document.querySelector('.mobile-nav-toggle');
-    const nav = document.querySelector('.main-nav');
-    
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => {
-            nav.classList.toggle('active');
-            const icon = mobileToggle.querySelector('i');
-            icon.classList.toggle('bi-list');
-            icon.classList.toggle('bi-x');
-        });
-    }
+    window.app = new NoteManager();
 });
