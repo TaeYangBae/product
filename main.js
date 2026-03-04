@@ -36,6 +36,14 @@ class NoteManager {
         this.titleInput.addEventListener('input', () => this.saveCurrentNote());
         this.bodyInput.addEventListener('input', () => this.saveCurrentNote());
 
+        // ENTER in title moves to body
+        this.titleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.bodyInput.focus();
+            }
+        });
+
         this.renderNotesList();
         this.updateTotalCount();
     }
