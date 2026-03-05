@@ -124,6 +124,40 @@
         </aside>
     </div>
 
+    <!-- Schedule Modal -->
+    <div id="schedule-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2 id="schedule-modal-title">날짜 일정 추가</h2>
+                <button id="close-schedule-modal" class="btn-icon"><i class="bi bi-x-lg"></i></button>
+            </header>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="schedule-title">일정 제목</label>
+                    <input type="text" id="schedule-title" placeholder="일정 내용을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="schedule-frequency">반복 주기</label>
+                    <select id="schedule-frequency">
+                        <option value="none">반복 없음</option>
+                        <option value="daily">매일</option>
+                        <option value="monthly">매달</option>
+                        <option value="yearly">매년</option>
+                    </select>
+                </div>
+                <div id="schedule-list-container" class="schedule-list-container">
+                    <h3>오늘의 일정</h3>
+                    <ul id="schedule-list">
+                        <!-- Schedules will be injected here -->
+                    </ul>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button id="save-schedule-btn" class="btn-primary">저장하기</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
