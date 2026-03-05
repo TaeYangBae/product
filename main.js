@@ -44,15 +44,23 @@ class NoteManager {
         this.dateDisplay = document.getElementById('note-date');
         this.totalNotesDisplay = document.getElementById('total-notes');
         
+        // Image Upload Elements
+        this.imageUploadBtn = document.getElementById('image-upload-btn');
+        this.imageUploadInput = document.getElementById('image-upload-input');
+        this.noteImageContainer = document.getElementById('note-image-container');
+        this.noteImagePreview = document.getElementById('note-image-preview');
+        this.removeImageBtn = document.getElementById('remove-image-btn');
+        
         // Password Elements
         this.passwordOverlay = document.getElementById('password-overlay');
         this.passwordInput = document.getElementById('password-input');
         this.passwordError = document.getElementById('password-error');
         this.mainApp = document.getElementById('main-app');
         
-        // Calendar Elements
+        // Calendar & D-Day Elements
         this.calendarGrid = document.getElementById('calendar-grid');
         this.calendarMonthYear = document.getElementById('calendar-month-year');
+        this.ddayList = document.getElementById('dday-list');
         
         // Schedule Modal Elements
         this.scheduleModal = document.getElementById('schedule-modal');
@@ -102,6 +110,11 @@ class NoteManager {
         });
         this.passwordInput.addEventListener('input', (e) => this.handlePasswordInput(e));
         
+        // Image Upload Listeners
+        this.imageUploadBtn.addEventListener('click', () => this.imageUploadInput.click());
+        this.imageUploadInput.addEventListener('change', (e) => this.handleImageUpload(e));
+        this.removeImageBtn.addEventListener('click', () => this.removeImage());
+        
         // Schedule Event Listeners
         this.closeScheduleBtn.addEventListener('click', () => this.closeModal());
         this.saveScheduleBtn.addEventListener('click', () => this.saveSchedule());
@@ -141,6 +154,18 @@ class NoteManager {
             this.renderNotesList();
             this.updateTotalCount();
             this.renderPinnedView();
+            
+            if (this.currentNoteId) {
+                const currentNote = this.notes.find(n => n.id === this.currentNoteId);
+                if (currentNote) {
+                    if (currentNote.image) {
+                        this.noteImagePreview.src = currentNote.image;
+                        this.noteImageContainer.classList.remove('hidden');
+                    } else {
+                        this.noteImageContainer.classList.add('hidden');
+                    }
+                }
+            }
         });
     }
 
@@ -151,7 +176,72 @@ class NoteManager {
             const data = snapshot.val();
             this.schedules = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
             this.renderCalendar();
+            this.renderDDayList();
         });
+    }
+
+    // --- Image Logic ---
+    handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file || !this.currentNoteId) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target.result;
+            this.noteImagePreview.src = base64;
+            this.noteImageContainer.classList.remove('hidden');
+            
+            // Save to DB
+            await update(ref(this.db, `notes/${this.currentNoteId}`), {
+                image: base64,
+                updatedAt: serverTimestamp()
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async removeImage() {
+        if (!this.currentNoteId) return;
+        this.noteImageContainer.classList.add('hidden');
+        this.noteImagePreview.src = '';
+        await update(ref(this.db, `notes/${this.currentNoteId}`), {
+            image: null,
+            updatedAt: serverTimestamp()
+        });
+    }
+
+    // --- D-Day Logic ---
+    renderDDayList() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const upcoming = this.schedules
+            .filter(s => s.frequency === 'none' || s.frequency === 'yearly')
+            .map(s => {
+                let eventDate = new Date(s.date);
+                if (s.frequency === 'yearly') {
+                    eventDate.setFullYear(now.getFullYear());
+                    if (eventDate < now) eventDate.setFullYear(now.getFullYear() + 1);
+                }
+                const diffTime = eventDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return { ...s, diffDays, eventDate };
+            })
+            .filter(s => s.diffDays >= 0)
+            .sort((a, b) => a.diffDays - b.diffDays)
+            .slice(0, 3);
+
+        this.ddayList.innerHTML = upcoming.length === 0 
+            ? '<div class="empty-state">No upcoming events</div>'
+            : upcoming.map(s => `
+                <div class="dday-item">
+                    <div class="dday-info">
+                        <span class="dday-title">${s.title}</span>
+                        <span class="dday-date">${s.eventDate.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <span class="dday-badge">D-${s.diffDays === 0 ? 'Day' : s.diffDays}</span>
+                </div>
+            `).join('');
     }
 
     // --- Schedule Logic ---
@@ -269,6 +359,14 @@ class NoteManager {
         this.currentNoteId = id;
         this.titleInput.value = note.title || '';
         this.bodyInput.value = note.body || '';
+        
+        if (note.image) {
+            this.noteImagePreview.src = note.image;
+            this.noteImageContainer.classList.remove('hidden');
+        } else {
+            this.noteImageContainer.classList.add('hidden');
+        }
+
         this.updateDateDisplay(note.updatedAt);
         this.updatePinButtonUI();
         this.editorContainer.classList.remove('hidden');
@@ -277,7 +375,6 @@ class NoteManager {
         this.closeMobileSidebar();
     }
 
-    // (Rest of the NoteManager methods: save, delete, pin, etc.)
     debouncedSave() { if (this.saveTimeout) clearTimeout(this.saveTimeout); this.saveTimeout = setTimeout(() => this.saveCurrentNote(), 1000); }
     async saveCurrentNote() {
         if (!this.currentNoteId || !this.db) return;

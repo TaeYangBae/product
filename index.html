@@ -69,6 +69,17 @@
                 </div>
             </section>
             
+            <!-- D-Day Section -->
+            <section class="dday-section" id="dday-section">
+                <header class="section-header">
+                    <i class="bi bi-flag-fill"></i>
+                    <h2>Upcoming D-Day</h2>
+                </header>
+                <div id="dday-list" class="dday-list">
+                    <!-- D-day items will be injected here -->
+                </div>
+            </section>
+            
             <footer class="sidebar-footer">
                 <p id="total-notes">0 notes</p>
             </footer>
@@ -90,6 +101,10 @@
                         <span id="note-date">Last modified: -</span>
                     </div>
                     <div class="editor-actions">
+                        <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                        <button id="image-upload-btn" class="btn-icon" aria-label="이미지 첨부">
+                            <i class="bi bi-image"></i>
+                        </button>
                         <button id="pin-note-btn" class="btn-icon" aria-label="메모 고정">
                             <i class="bi bi-pin-angle"></i>
                         </button>
@@ -104,6 +119,10 @@
                 
                 <div class="note-editor">
                     <input type="text" id="note-title-input" class="title-input" placeholder="제목 없음">
+                    <div id="note-image-container" class="note-image-container hidden">
+                        <img id="note-image-preview" src="" alt="첨부 이미지">
+                        <button id="remove-image-btn" class="remove-image-btn"><i class="bi bi-x"></i></button>
+                    </div>
                     <textarea id="note-body-input" class="body-input" placeholder="여기에 내용을 입력하세요..."></textarea>
                 </div>
             </div>
