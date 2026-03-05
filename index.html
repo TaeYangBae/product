@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Notepad | 스마트 메모장</title>
+    <title>Modern Notepad | 프리미엄 메모장</title>
     
     <!-- Google Fonts & Pretendard -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     
-    <!-- Icons: Lucide (Icons as a font via CDN) -->
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Password Protection Overlay -->
+    <!-- Password Protection -->
     <div id="password-overlay" class="password-overlay">
         <div class="password-card">
-            <div class="lock-icon">
-                <i class="bi bi-shield-lock-fill"></i>
-            </div>
+            <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
             <h2>비공개 메모장</h2>
             <p>비밀번호 4자리를 입력하세요.</p>
             <div class="password-input-group">
@@ -30,16 +28,11 @@
     </div>
 
     <div class="app-container blurred" id="main-app">
-        <!-- Mobile Menu Toggle -->
-        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">
-            <i class="bi bi-list"></i>
-        </button>
-
-        <!-- Sidebar -->
+        <!-- 1st Column: Note List Sidebar -->
         <aside class="sidebar" id="sidebar">
             <header class="sidebar-header">
                 <h1>Memo <span>.</span></h1>
-                <button id="add-note-btn" class="btn-icon" aria-label="새 메모 추가">
+                <button id="add-note-btn" class="btn-icon add-main-btn" aria-label="새 메모 추가">
                     <i class="bi bi-plus-lg"></i>
                 </button>
             </header>
@@ -50,49 +43,20 @@
             </div>
             
             <nav class="notes-list" id="notes-list">
-                <!-- Notes will be injected here by JS -->
-                <div class="empty-state">
-                    <p>메모가 없습니다.</p>
-                </div>
+                <!-- Notes will be injected here -->
             </nav>
-            
-            <!-- Calendar Section -->
-            <section class="calendar-section">
-                <header class="calendar-header">
-                    <h2 id="calendar-month-year">March 2026</h2>
-                </header>
-                <div class="calendar-grid-header">
-                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                </div>
-                <div class="calendar-grid" id="calendar-grid">
-                    <!-- Dates will be injected here by JS -->
-                </div>
-            </section>
-            
-            <!-- D-Day Section -->
-            <section class="dday-section" id="dday-section">
-                <header class="section-header">
-                    <i class="bi bi-flag-fill"></i>
-                    <h2>Upcoming D-Day</h2>
-                </header>
-                <div id="dday-list" class="dday-list">
-                    <!-- D-day items will be injected here -->
-                </div>
-            </section>
             
             <footer class="sidebar-footer">
                 <p id="total-notes">0 notes</p>
             </footer>
         </aside>
         
-        <!-- Main Editor -->
+        <!-- 2nd Column: Main Editor -->
         <main class="editor-view" id="editor-view">
             <div id="no-selection" class="no-selection">
-                <div class="illustration">
-                    <i class="bi bi-journal-text"></i>
-                </div>
+                <div class="illustration"><i class="bi bi-journal-text"></i></div>
                 <h2>작성할 메모를 선택하세요</h2>
-                <p>또는 "+" 버튼을 눌러 새 메모를 시작하세요.</p>
+                <p>당신의 소중한 생각을 기록해보세요.</p>
             </div>
             
             <div id="editor-container" class="editor-container hidden">
@@ -102,18 +66,10 @@
                     </div>
                     <div class="editor-actions">
                         <input type="file" id="image-upload-input" accept="image/*" class="hidden">
-                        <button id="image-upload-btn" class="btn-icon" aria-label="이미지 첨부">
-                            <i class="bi bi-image"></i>
-                        </button>
-                        <button id="pin-note-btn" class="btn-icon" aria-label="메모 고정">
-                            <i class="bi bi-pin-angle"></i>
-                        </button>
-                        <button id="save-note-btn" class="btn-icon btn-save" aria-label="메모 저장">
-                            <i class="bi bi-check-lg"></i>
-                        </button>
-                        <button id="delete-note-btn" class="btn-icon btn-delete" aria-label="메모 삭제">
-                            <i class="bi bi-trash3"></i>
-                        </button>
+                        <button id="image-upload-btn" class="btn-icon" title="이미지 첨부"><i class="bi bi-image"></i></button>
+                        <button id="pin-note-btn" class="btn-icon" title="메모 고정"><i class="bi bi-pin-angle"></i></button>
+                        <button id="save-note-btn" class="btn-icon btn-save" title="메모 저장"><i class="bi bi-check-lg"></i></button>
+                        <button id="delete-note-btn" class="btn-icon btn-delete" title="메모 삭제"><i class="bi bi-trash3"></i></button>
                     </div>
                 </header>
                 
@@ -128,18 +84,39 @@
             </div>
         </main>
 
-        <!-- Right Pinned Sidebar -->
-        <aside class="pinned-sidebar" id="pinned-sidebar">
-            <header class="pinned-header">
-                <i class="bi bi-pin-fill"></i>
-                <h2>Pinned Memo</h2>
-            </header>
-            <div id="pinned-content" class="pinned-content">
-                <div class="pinned-empty">
-                    <p>고정된 메모가 없습니다.</p>
-                    <span>에디터에서 핀 아이콘을 눌러주세요.</span>
+        <!-- 3rd Column: Utility Sidebar (Calendar, D-Day, Pinned) -->
+        <aside class="utility-sidebar" id="utility-sidebar">
+            <!-- Pinned Memo Section -->
+            <section class="utility-section pinned-section">
+                <header class="utility-header">
+                    <i class="bi bi-pin-fill"></i>
+                    <h2>Pinned</h2>
+                </header>
+                <div id="pinned-content" class="pinned-content">
+                    <div class="pinned-empty">고정된 메모가 없습니다.</div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Calendar Section -->
+            <section class="utility-section calendar-section">
+                <header class="utility-header">
+                    <i class="bi bi-calendar3"></i>
+                    <h2 id="calendar-month-year">March 2026</h2>
+                </header>
+                <div class="calendar-grid-header">
+                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </section>
+
+            <!-- D-Day Section -->
+            <section class="utility-section dday-section">
+                <header class="utility-header">
+                    <i class="bi bi-flag-fill"></i>
+                    <h2>Upcoming</h2>
+                </header>
+                <div id="dday-list" class="dday-list"></div>
+            </section>
         </aside>
     </div>
 
@@ -147,16 +124,16 @@
     <div id="schedule-modal" class="modal-overlay hidden">
         <div class="modal-card">
             <header class="modal-header">
-                <h2 id="schedule-modal-title">날짜 일정 추가</h2>
+                <h2 id="schedule-modal-title">일정 관리</h2>
                 <button id="close-schedule-modal" class="btn-icon"><i class="bi bi-x-lg"></i></button>
             </header>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="schedule-title">일정 제목</label>
-                    <input type="text" id="schedule-title" placeholder="일정 내용을 입력하세요">
+                    <label>일정 제목</label>
+                    <input type="text" id="schedule-title" placeholder="무엇을 해야 하나요?">
                 </div>
                 <div class="form-group">
-                    <label for="schedule-frequency">반복 주기</label>
+                    <label>반복 주기</label>
                     <select id="schedule-frequency">
                         <option value="none">반복 없음</option>
                         <option value="daily">매일</option>
@@ -164,16 +141,14 @@
                         <option value="yearly">매년</option>
                     </select>
                 </div>
-                <div id="schedule-list-container" class="schedule-list-container">
+                <div class="schedule-list-container">
                     <h3>오늘의 일정</h3>
-                    <ul id="schedule-list">
-                        <!-- Schedules will be injected here -->
-                    </ul>
+                    <ul id="schedule-list"></ul>
                 </div>
             </div>
             <footer class="modal-footer">
-                <button id="save-schedule-btn" class="btn-primary">저장하기</button>
-            </div>
+                <button id="save-schedule-btn" class="btn-primary">저장</button>
+            </footer>
         </div>
     </div>
 

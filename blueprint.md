@@ -10,18 +10,21 @@ A minimalist, high-performance web-based notepad application. It focuses on a pr
 4. **Search/Filter**: Quickly find notes by title or content.
 5. **Responsive Design**: Seamless experience across mobile, tablet, and desktop.
 6. **Date Tracking**: Each note displays its last modified date.
-
 ## **Visual Design Strategy**
-- **Aesthetics**: "Glassmorphism" combined with clean Swiss typography.
+- **Aesthetics**: "3-Column Wide Layout" with Premium Glassmorphism.
+- **Layout Structure**:
+  - **Left (Sidebar)**: Dedicated space for Note List and Search (Wider for readability).
+  - **Center (Editor)**: Large, focused writing area.
+  - **Right (Utility)**: Dedicated sections for Pinned Notes, Calendar, and D-Day.
 - **Color Palette**:
   - Primary: Indigo/Violet - `oklch(60% 0.15 260)`
-  - Background: Soft Gray/White with a subtle noise texture.
-  - Accent: Vibrant Amber for "New Note" - `oklch(75% 0.15 80)`
-- **Typography**: Inter (Modern Sans-serif) with high-contrast headings.
+  - Background: Ultra-clean Off-white with subtle noise.
+  - Schedule Highlight: Soft Emerald - `oklch(70% 0.15 150)`
+- **Typography**: Inter / Pretendard (Modern Sans-serif) with high-contrast headings.
 - **Interactive Elements**:
-  - Smooth transitions between note selection.
-  - "Lifted" card effects with deep soft shadows.
-  - Hover states with elegant glow effects.
+  - Floating card effects for note items.
+  - Smooth 3-pane responsive transitions.
+  - Glassmorphism effects on sidebars.
 
 ## **Implementation Plan**
 
