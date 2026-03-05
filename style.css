@@ -21,7 +21,7 @@
     --shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.06);
     --shadow-glow: 0 8px 30px oklch(85% 0.12 260 / 0.3);
     
-    --sidebar-width: 420px; /* Wider for list */
+    --sidebar-width: 420px;
     --utility-width: 340px;
     --transition: 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
@@ -36,7 +36,6 @@ body {
     height: 100vh;
 }
 
-/* Background Texture */
 body::before {
     content: ""; position: fixed; inset: 0; opacity: 0.02; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -50,7 +49,7 @@ body::before {
 
 .app-container.blurred { filter: blur(20px); }
 
-/* --- 1st Column: Sidebar (List Focus) --- */
+/* --- 1st Column: Sidebar --- */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-sidebar);
@@ -84,10 +83,7 @@ body::before {
     box-shadow: var(--shadow-sm);
 }
 
-.notes-list {
-    flex: 1; overflow-y: auto; padding: 0 16px 20px;
-    /* Removed fixed masks for better visibility */
-}
+.notes-list { flex: 1; overflow-y: auto; padding: 0 16px 20px; }
 
 .note-item {
     padding: 24px; border-radius: 24px; margin-bottom: 14px; cursor: pointer;
@@ -106,13 +102,43 @@ body::before {
 
 .note-item .meta { font-size: 12px; margin-top: 14px; color: var(--text-muted); font-weight: 700; opacity: 0.7; }
 
+.sidebar-footer { padding: 20px 32px; font-size: 12px; font-weight: 700; color: var(--text-muted); border-top: 1px solid rgba(0,0,0,0.03); }
+
 /* --- 2nd Column: Editor --- */
 .editor-view {
     flex: 1; background: var(--bg-card); backdrop-filter: blur(40px);
     border-radius: var(--radius-xl); border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow: var(--shadow-lg); display: flex; flex-direction: column;
-    min-width: 0;
+    min-width: 0; position: relative;
 }
+
+/* Empty State / No Selection */
+.no-selection {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 48px;
+    animation: fadeIn 0.6s ease;
+}
+
+.no-selection .illustration {
+    width: 160px; height: 180px;
+    background: linear-gradient(135deg, var(--primary-glow), transparent);
+    border-radius: 50% 50% 40% 40%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; color: var(--primary); margin-bottom: 32px;
+    box-shadow: var(--shadow-glow);
+}
+
+.no-selection h2 { font-size: 28px; font-weight: 900; margin-bottom: 12px; letter-spacing: -1px; }
+.no-selection p { font-size: 16px; color: var(--text-muted); font-weight: 600; line-height: 1.6; }
+
+/* Editor Content */
+.editor-container {
+    display: flex; flex-direction: column; height: 100%;
+    animation: editorSlide 0.5s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes editorSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .editor-header { padding: 32px 48px; display: flex; justify-content: space-between; align-items: center; }
 .editor-meta span { font-size: 14px; font-weight: 700; color: var(--text-muted); background: var(--bg-app); padding: 8px 18px; border-radius: 20px; }
@@ -151,12 +177,15 @@ body::before {
 .pinned-memo-card {
     background: oklch(96% 0.04 90); padding: 20px; border-radius: 20px;
     box-shadow: var(--shadow-sm); color: oklch(20% 0.05 90); transform: rotate(1deg);
+    transition: 0.3s;
 }
+.pinned-memo-card:hover { transform: rotate(0deg) scale(1.02); }
 
 /* Calendar Utility */
 .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 10px; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+.calendar-day:hover:not(.empty) { background: white; }
 .calendar-day.today { background: var(--primary); color: white; }
 .calendar-day.has-schedule::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--success); border-radius: 50%; }
 
@@ -178,15 +207,13 @@ body::before {
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
 .modal-card { background: white; width: 400px; border-radius: 30px; overflow: hidden; animation: slideUp 0.4s ease-out; }
 
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 .hidden { display: none !important; }
 
 /* Responsive (Mobile) */
-@media (max-width: 1200px) {
-    .utility-sidebar { display: none; }
-}
-
+@media (max-width: 1200px) { .utility-sidebar { display: none; } }
 @media (max-width: 768px) {
     .app-container { padding: 0; }
     .sidebar { position: fixed; left: 0; z-index: 100; height: 100%; transform: translateX(-100%); }
